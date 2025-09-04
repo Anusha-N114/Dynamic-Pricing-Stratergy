@@ -1,0 +1,7 @@
+name: Auto Structure Repo
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run without moving files (preview only)"
+...
