@@ -1,6 +1,6 @@
 name: Auto Structure Repo
 on:
-  workflow_dispatch:   # lets you run manually from Actions tab
+  workflow_dispatch: {}   # run manually from Actions tab
 
 jobs:
   restructure:
@@ -20,23 +20,36 @@ jobs:
 
       - name: Create folders
         run: |
-          mkdir -p data/raw data/processed notebooks src reports/figures sql docs
+          mkdir -p data/raw data/processed notebooks src reports/figures sql docs .github
 
-      - name: Run organizer
-        run: python .github/scripts/organize_repo.py
-
-      - name: Generate requirements.txt
+      - name: Run organizer (verbose + writes run log)
+        env:
+          DRY_RUN: "false"        # set to "true" if you want preview-only
         run: |
-          pip install pipreqs
-          pipreqs --force .
+          python .github/scripts/organize_repo.py
 
-      - name: Commit changes
+      - name: Generate requirements.txt (if Python present)
+        run: |
+          if git ls-files '*.py' | grep -q . ; then
+            pip install pipreqs
+            pipreqs --force .
+          else
+            echo "No Python files found, skipping pipreqs."
+          fi
+
+      - name: Commit changes (always includes run log)
         run: |
           git config user.name "github-actions"
           git config user.email "actions@users.noreply.github.com"
-          git checkout -B chore/auto-structure   # recreate branch always
+          git checkout -B chore/auto-structure   # recreate/update branch
           git add -A
-          git commit -m "chore: auto-structure repo" || echo "No changes"
+          # If nothing to commit, still add a timestamp line to the log so a PR can open.
+          if git diff --cached --quiet; then
+            echo "No structural changes detected. Appending timestamp to log to create PR."
+            echo "$(date -u) — no changes" >> .github/auto-structure-log.txt
+            git add .github/auto-structure-log.txt
+          fi
+          git commit -m "chore: auto-structure repo (with run log)" || echo "No commit created."
           git push origin chore/auto-structure --force
 
       - name: Create Pull Request
@@ -46,8 +59,12 @@ jobs:
           base: main
           title: "Auto-structure repo"
           body: |
-            This PR was created automatically by GitHub Actions.
+            This PR was created automatically.
 
-            ✅ Standard folders created
-            ✅ Files moved into correct places
-            ✅ requirements.txt generated/updated
+            - Standard folders created (if missing)
+            - Files moved into conventional locations
+            - Notebooks/images/docs organized
+            - requirements.txt generated if Python files exist
+            - Verbose log saved at `.github/auto-structure-log.txt`
+
+            Merge if the moves look correct.
