@@ -1,7 +1,48 @@
 name: Auto Structure Repo
 on:
-  workflow_dispatch:
-    inputs:
-      dry_run:
-        description: "Run without moving files (preview only)"
-...
+  workflow_dispatch:   # lets you run manually from Actions tab
+
+jobs:
+  restructure:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Create folders
+        run: |
+          mkdir -p data/raw data/processed notebooks src reports/figures sql docs
+
+      - name: Run organizer
+        run: python .github/scripts/organize_repo.py
+
+      - name: Generate requirements.txt
+        run: |
+          pip install pipreqs
+          pipreqs --force .
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -b chore/auto-structure || true
+          git add -A
+          git commit -m "chore: auto-structure repo" || echo "No changes"
+          git push origin chore/auto-structure || true
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/auto-structure
+          title: "Auto-structure repo"
+          body: "Moved files, created folders, updated requirements.txt"
+
