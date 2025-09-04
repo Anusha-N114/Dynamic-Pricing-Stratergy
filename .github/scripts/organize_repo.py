@@ -11,6 +11,7 @@ RULES = {
     "*.jpg": "reports/figures",
     "*.jpeg": "reports/figures",
     "*.pdf": "docs",
+    "*.pbix": "reports",   # Power BI files
 }
 
 IGNORE = {".git", ".github"}
@@ -34,3 +35,4 @@ for pattern, target in RULES.items():
         if file.startswith(tuple(RULES.values())):
             continue
         safe_move(file, target)
+
