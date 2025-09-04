@@ -77,3 +77,15 @@ From the business report:contentReference[oaicite:3]{index=3}:
 ---
 
 ## 📂 Repository Structure
+Dynamic-Pricing-Stratergy/
+├── data/raw/ # Raw datasets
+├── notebooks/ # Jupyter notebooks (EDA, forecasting, modeling)
+├── src/ # Python scripts for preprocessing, modeling
+├── reports/figures/ # Visualizations & plots
+├── report/ # Documentation & deliverables
+│ ├── EDA report.pdf # Exploratory Data Analysis report
+│ ├── business recommendation.pptx # Business recommendation presentation
+│ └── Mentorship_Certificate.pdf # (optional) certificate of completion
+├── requirements.txt # Project dependencies
+└── README.md # Project documentation
+
