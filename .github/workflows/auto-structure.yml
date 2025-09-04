@@ -34,15 +34,20 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@users.noreply.github.com"
-          git checkout -b chore/auto-structure || true
+          git checkout -b chore/auto-structure || git checkout chore/auto-structure
           git add -A
-          git commit -m "chore: auto-structure repo" || echo "No changes"
+          git commit -m "chore: auto-structure repo" || echo "No changes to commit"
           git push origin chore/auto-structure || true
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
           branch: chore/auto-structure
+          base: main
           title: "Auto-structure repo"
-          body: "Moved files, created folders, updated requirements.txt"
+          body: |
+            This PR was created automatically by GitHub Actions.
 
+            ✅ Standard folders created
+            ✅ Files moved into correct places
+            ✅ requirements.txt generated/updated
