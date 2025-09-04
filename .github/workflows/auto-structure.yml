@@ -15,19 +15,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure Git & create work branch FIRST
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -B chore/auto-structure origin/main || git checkout -B chore/auto-structure
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Create folders
+      - name: Ensure folders exist
         run: |
           mkdir -p data/raw data/processed notebooks src reports/figures sql docs .github
 
-      - name: Run organizer (verbose + writes log)
+      - name: Run organizer (moves files with git mv + verbose log)
         run: python .github/scripts/organize_repo.py
 
-      - name: Generate requirements.txt (if Python present)
+      - name: Generate requirements.txt (if Python files exist)
         run: |
           if git ls-files '*.py' | grep -q . ; then
             pip install pipreqs
@@ -36,16 +42,8 @@ jobs:
             echo "No Python files found."
           fi
 
-      - name: Commit to chore/auto-structure
+      - name: Commit changes on branch
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@users.noreply.github.com"
-
-          # create/update branch from latest main
-          git fetch origin main
-          git checkout -B chore/auto-structure origin/main
-
-          # ensure we have at least one line changed so PR always opens
           echo "Run at $(date -u)" >> .github/auto-structure-log.txt
           git add -A
           git commit -m "chore: auto-structure (moves + log)" || echo "No changes to commit"
@@ -54,15 +52,13 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
-          branch: chore/auto-structure
-          base: main
+          branch: chore/auto-structure     # head
+          base: main                       # base
           title: "Auto-structure repo"
           body: |
             This PR was created automatically.
 
-            - Files moved using **git mv** (so diffs show clearly)
+            - Files moved using **git mv** (clear diffs)
             - Standard folders created
-            - `requirements.txt` refreshed (if Python files exist)
-            - Verbose run log at `.github/auto-structure-log.txt`
-
-            Review the moves and merge if they look good.
+            - `requirements.txt` refreshed (if Python found)
+            - Verbose log at `.github/auto-structure-log.txt`
